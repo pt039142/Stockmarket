@@ -9,6 +9,9 @@ const dom = {
   profitTarget: document.getElementById('profitTarget'),
   lossCap: document.getElementById('lossCap'),
   sessionMode: document.getElementById('sessionMode'),
+  liveStateChip: document.getElementById('liveStateChip'),
+  marketStateChip: document.getElementById('marketStateChip'),
+  riskStateChip: document.getElementById('riskStateChip'),
   totalTrades: document.getElementById('totalTrades'),
   totalTradesHint: document.getElementById('totalTradesHint'),
   winRate: document.getElementById('winRate'),
@@ -138,6 +141,8 @@ function drawCurve(values) {
   const min = Math.min(...values, 0);
   const max = Math.max(...values, 0);
   const span = Math.max(max - min, 1);
+  const lineColor = values[values.length - 1] >= 0 ? '#6ee7c8' : '#fb7185';
+  const fillColor = values[values.length - 1] >= 0 ? 'rgba(110, 231, 200, 0.18)' : 'rgba(251, 113, 133, 0.16)';
   const points = values
     .map((value, idx) => {
       const x = padding + ((width - padding * 2) * idx) / Math.max(values.length - 1, 1);
@@ -146,13 +151,36 @@ function drawCurve(values) {
     })
     .join(' ');
 
+  const areaPoints = `24,${height - padding} ${points} ${width - padding},${height - padding}`;
   const zeroY = padding + (1 - (0 - min) / span) * (height - padding * 2);
+  const lastValue = values[values.length - 1];
+  const lastIndex = values.length - 1;
+  const lastX = padding + ((width - padding * 2) * lastIndex) / Math.max(values.length - 1, 1);
+  const lastY = padding + (1 - (lastValue - min) / span) * (height - padding * 2);
+  const peak = Math.max(...values);
+  const trough = Math.min(...values);
 
   return `
-    <svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}" role="img" aria-label="Equity curve">
+    <svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}" role="img" aria-label="Equity curve" class="equity-svg">
+      <defs>
+        <linearGradient id="curveGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="${lineColor}" stop-opacity="0.55" />
+          <stop offset="100%" stop-color="${lineColor}" stop-opacity="0" />
+        </linearGradient>
+      </defs>
       <rect x="0" y="0" width="${width}" height="${height}" rx="18" fill="#091525" />
+      <g opacity="0.35">
+        <line x1="${padding}" y1="${padding + 42}" x2="${width - padding}" y2="${padding + 42}" stroke="#243449" stroke-width="1" />
+        <line x1="${padding}" y1="${padding + 92}" x2="${width - padding}" y2="${padding + 92}" stroke="#243449" stroke-width="1" />
+        <line x1="${padding}" y1="${padding + 142}" x2="${width - padding}" y2="${padding + 142}" stroke="#243449" stroke-width="1" />
+      </g>
       <line x1="${padding}" y1="${zeroY}" x2="${width - padding}" y2="${zeroY}" stroke="#243449" stroke-width="1.2" stroke-dasharray="5 5" />
-      <polyline points="${points}" fill="none" stroke="#6ee7c8" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round" />
+      <polygon points="${areaPoints}" fill="${fillColor}" />
+      <polyline points="${points}" fill="none" stroke="${lineColor}" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" />
+      <circle cx="${lastX}" cy="${lastY}" r="5.5" fill="${lineColor}" />
+      <circle cx="${lastX}" cy="${lastY}" r="10" fill="url(#curveGlow)" opacity="0.35" />
+      <text x="${padding}" y="18" fill="#97a8bf" font-size="11">Peak ${formatCurrency(peak)}</text>
+      <text x="${padding}" y="${height - 8}" fill="#97a8bf" font-size="11">Trough ${formatCurrency(trough)}</text>
     </svg>
   `;
 }
@@ -172,6 +200,16 @@ function renderSummary(summary, report) {
     ? `Session ${report.session_summaries[0].profit_target_reached ? 'hit target' : report.session_summaries[0].loss_limit_hit ? 'hit loss cap' : 'running'}`
     : 'No session summary';
   dom.modeChip.textContent = report.trades && report.trades.length ? 'Paper report' : 'Demo fallback';
+  dom.liveStateChip.textContent = report.trades && report.trades.length ? 'Live data' : 'Demo safe';
+  dom.marketStateChip.textContent = summary.net_pnl >= 0 ? 'Bias up' : 'Bias defensive';
+  dom.riskStateChip.textContent = (report.session_summaries?.[0]?.loss_limit_hit || (summary.max_drawdown || 0) > 300)
+    ? 'Risk high'
+    : report.session_summaries?.[0]?.profit_target_reached
+      ? 'Target hit'
+      : 'Risk calm';
+  dom.liveStateChip.className = `status-chip ${report.trades && report.trades.length ? 'good' : 'warning'}`;
+  dom.marketStateChip.className = `status-chip ${summary.net_pnl >= 0 ? 'good' : 'warning'}`;
+  dom.riskStateChip.className = `status-chip ${(report.session_summaries?.[0]?.loss_limit_hit || (summary.max_drawdown || 0) > 300) ? 'bad' : report.session_summaries?.[0]?.profit_target_reached ? 'good' : 'warning'}`;
 
   const latestSession = report.session_summaries?.[0] || {};
   dom.summaryList.innerHTML = [
@@ -223,8 +261,8 @@ function renderSummary(summary, report) {
   }, []) : [];
   dom.chartWrap.innerHTML = drawCurve(equity);
   dom.chartCaption.textContent = report.trades && report.trades.length
-    ? 'Equity curve based on closed trades from the latest report.'
-    : 'No closed trades yet, so the demo curve is shown to keep the layout informative.';
+    ? 'Equity curve now includes a shaded fill, a live endpoint marker, and reference grid lines for easier reading.'
+    : 'No closed trades yet, so the demo curve is shown with a sharper market-style frame.';
 
   const miniData = [
     ['Profit Target', formatCurrency(1500)],

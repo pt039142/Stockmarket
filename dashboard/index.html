@@ -38,9 +38,16 @@
         </div>
       </div>
       <aside class="hero-card">
-        <div class="hero-card-top">
-          <span class="status-dot" id="connectionDot"></span>
-          <span id="connectionLabel">Waiting for report</span>
+        <div class="hero-card-top status-header">
+          <div class="status-main">
+            <span class="status-dot" id="connectionDot"></span>
+            <span id="connectionLabel">Waiting for report</span>
+          </div>
+          <div class="status-chips">
+            <span class="status-chip" id="liveStateChip">Connecting</span>
+            <span class="status-chip" id="marketStateChip">Neutral</span>
+            <span class="status-chip" id="riskStateChip">Controlled</span>
+          </div>
         </div>
         <div class="hero-kpi">
           <div>
@@ -63,7 +70,15 @@
   </header>
 
   <section class="workspace">
-    <aside class="side-rail">
+      <aside class="side-rail">
+      <div class="rail-card icon-strip">
+        <a href="#overview" aria-label="Overview">&#9633;</a>
+        <a href="#equityCurve" aria-label="Equity Curve">&#8764;</a>
+        <a href="#sessionSummary" aria-label="Session Summary">&#9632;</a>
+        <a href="#tradeJournal" aria-label="Trade Journal">&#9783;</a>
+        <a href="#executionTimeline" aria-label="Execution Timeline">&#9679;</a>
+      </div>
+
       <div class="rail-card pulse-card">
         <div class="rail-header">
           <span class="panel-eyebrow">Market Pulse</span>
@@ -80,11 +95,11 @@
         <div class="rail-header">
           <span class="panel-eyebrow">Quick Jump</span>
         </div>
-        <a href="#overview">Overview</a>
-        <a href="#equityCurve">Equity Curve</a>
-        <a href="#sessionSummary">Session Summary</a>
-        <a href="#tradeJournal">Trade Journal</a>
-        <a href="#executionTimeline">Execution Timeline</a>
+        <a href="#overview"><span>&#9632;</span> Overview</a>
+        <a href="#equityCurve"><span>&#8764;</span> Equity Curve</a>
+        <a href="#sessionSummary"><span>&#9633;</span> Session Summary</a>
+        <a href="#tradeJournal"><span>&#9783;</span> Trade Journal</a>
+        <a href="#executionTimeline"><span>&#9679;</span> Execution Timeline</a>
       </nav>
     </aside>
 
