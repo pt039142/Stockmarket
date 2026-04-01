@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PrinceStockExhange</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">PrinceStockExhange</div>
+        <h1>Calm, disciplined trading control for live and paper sessions.</h1>
+        <p>
+          Track your trading session, review the market read, inspect exits, and keep the bot
+          inside hard daily guardrails. Built for local testing before deployment.
+        </p>
+        <div class="hero-actions">
+          <button id="refreshBtn" class="primary">Refresh Report</button>
+          <button id="demoBtn" class="secondary">Load Demo View</button>
+        </div>
+      </div>
+      <aside class="hero-card">
+        <div class="hero-card-top">
+          <span class="status-dot" id="connectionDot"></span>
+          <span id="connectionLabel">Waiting for report</span>
+        </div>
+        <div class="hero-kpi">
+          <div>
+            <span class="kpi-label">Daily Target</span>
+            <strong id="profitTarget">₹1,500</strong>
+          </div>
+          <div>
+            <span class="kpi-label">Daily Loss Cap</span>
+            <strong id="lossCap">₹500</strong>
+          </div>
+          <div>
+            <span class="kpi-label">Session Mode</span>
+            <strong id="sessionMode">Paper</strong>
+          </div>
+        </div>
+      </aside>
+    </header>
+
+    <main>
+      <section class="metrics-grid">
+        <article class="metric-card">
+          <span>Total Trades</span>
+          <strong id="totalTrades">0</strong>
+          <p id="totalTradesHint">No report loaded yet.</p>
+        </article>
+        <article class="metric-card">
+          <span>Win Rate</span>
+          <strong id="winRate">0%</strong>
+          <p>Focus on repeatability, not one-off wins.</p>
+        </article>
+        <article class="metric-card">
+          <span>Net P&L</span>
+          <strong id="netPnl">₹0</strong>
+          <p id="netPnlHint">Staying inside daily guardrails.</p>
+        </article>
+        <article class="metric-card">
+          <span>Max Drawdown</span>
+          <strong id="drawdown">₹0</strong>
+          <p>Track the worst equity dip from peak.</p>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <article class="panel chart-panel">
+          <div class="panel-header">
+            <div>
+              <span class="panel-eyebrow">Equity Curve</span>
+              <h2>Session growth and recovery</h2>
+            </div>
+            <div class="panel-pill" id="regimePill">No regime</div>
+          </div>
+          <div id="chartWrap" class="chart-wrap">
+            <div class="empty-state">Load a report to see the curve.</div>
+          </div>
+        </article>
+
+        <article class="panel summary-panel">
+          <div class="panel-header">
+            <div>
+              <span class="panel-eyebrow">Session Summary</span>
+              <h2>Risk and execution snapshot</h2>
+            </div>
+          </div>
+          <div class="summary-list" id="summaryList"></div>
+        </article>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <span class="panel-eyebrow">Trades</span>
+            <h2>Trade journal</h2>
+          </div>
+          <div class="panel-pill accent" id="reportStamp">No report loaded</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Symbol</th>
+                <th>Side</th>
+                <th>Entry</th>
+                <th>Exit</th>
+                <th>P&L</th>
+                <th>Reason</th>
+                <th>Confidence</th>
+              </tr>
+            </thead>
+            <tbody id="tradeTableBody">
+              <tr>
+                <td colspan="8" class="muted-cell">Load a report to review trades.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <span class="panel-eyebrow">Events</span>
+            <h2>Execution timeline</h2>
+          </div>
+        </div>
+        <div id="eventsList" class="timeline">
+          <div class="empty-state">No events loaded yet.</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
