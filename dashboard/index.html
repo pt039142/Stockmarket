@@ -8,17 +8,33 @@
 </head>
 <body>
   <div class="page-shell">
-    <header class="hero">
+    <section class="topbar">
+      <div class="brand-lockup">
+        <div class="brand-mark">P</div>
+        <div>
+          <div class="brand-name">PrinceStockExhange</div>
+          <div class="brand-sub">Friendly trading cockpit for paper and live sessions</div>
+        </div>
+      </div>
+      <div class="topbar-meta">
+        <div class="meta-chip" id="modeChip">Paper mode</div>
+        <div class="meta-chip" id="refreshChip">Auto-refresh on</div>
+        <div class="meta-chip" id="lastSeenChip">Waiting for report</div>
+      </div>
+    </section>
+
+  <header class="hero">
       <div class="hero-copy">
-        <div class="eyebrow">PrinceStockExhange</div>
-        <h1>Calm, disciplined trading control for live and paper sessions.</h1>
+        <div class="eyebrow">PrinceStockExhange dashboard</div>
+        <h1>Simple enough to trust. Clear enough to act on.</h1>
         <p>
-          Track your trading session, review the market read, inspect exits, and keep the bot
-          inside hard daily guardrails. Built for local testing before deployment.
+          See where the bot stands, how much risk remains, and what happened in the latest session.
+          The dashboard is built to feel like a trading terminal, not a spreadsheet.
         </p>
         <div class="hero-actions">
-          <button id="refreshBtn" class="primary">Refresh Report</button>
-          <button id="demoBtn" class="secondary">Load Demo View</button>
+          <button id="refreshBtn" class="primary">Refresh now</button>
+          <button id="demoBtn" class="secondary">Show demo view</button>
+          <button id="openJsonBtn" class="secondary">Open JSON</button>
         </div>
       </div>
       <aside class="hero-card">
@@ -40,10 +56,63 @@
             <strong id="sessionMode">Paper</strong>
           </div>
         </div>
-      </aside>
-    </header>
+        <div class="quick-note" id="quickNote">
+          Waiting for the latest report. If no paper trades exist yet, the dashboard will show a demo view so the layout stays useful.
+        </div>
+    </aside>
+  </header>
 
-    <main>
+  <section class="workspace">
+    <aside class="side-rail">
+      <div class="rail-card pulse-card">
+        <div class="rail-header">
+          <span class="panel-eyebrow">Market Pulse</span>
+          <span class="rail-badge" id="pulseBadge">Watching</span>
+        </div>
+        <h2 id="pulseHeadline">Waiting for session data</h2>
+        <p id="pulseSummary">
+          The pulse panel refreshes from the latest paper report so you can see bias, risk, and momentum at a glance.
+        </p>
+        <div class="pulse-stats" id="pulseStats"></div>
+      </div>
+
+      <nav class="rail-card rail-nav" aria-label="Dashboard sections">
+        <div class="rail-header">
+          <span class="panel-eyebrow">Quick Jump</span>
+        </div>
+        <a href="#overview">Overview</a>
+        <a href="#equityCurve">Equity Curve</a>
+        <a href="#sessionSummary">Session Summary</a>
+        <a href="#tradeJournal">Trade Journal</a>
+        <a href="#executionTimeline">Execution Timeline</a>
+      </nav>
+    </aside>
+
+    <main class="workspace-main">
+      <section id="overview" class="guide-grid">
+        <article class="guide-card">
+          <span class="guide-index">1</span>
+          <div>
+            <h3>Watch the headline cards</h3>
+            <p>They show total trades, win rate, net P&L, and drawdown in one glance.</p>
+          </div>
+        </article>
+        <article class="guide-card">
+          <span class="guide-index">2</span>
+          <div>
+            <h3>Read the equity curve</h3>
+            <p>It tells you whether the session is steadily improving or chopping around.</p>
+          </div>
+        </article>
+        <article class="guide-card">
+          <span class="guide-index">3</span>
+          <div>
+            <h3>Check events and trades</h3>
+            <p>Open and exit logic should always be visible, not hidden behind the UI.</p>
+          </div>
+        </article>
+      </section>
+
       <section class="metrics-grid">
         <article class="metric-card">
           <span>Total Trades</span>
@@ -68,7 +137,7 @@
       </section>
 
       <section class="content-grid">
-        <article class="panel chart-panel">
+        <article id="equityCurve" class="panel chart-panel">
           <div class="panel-header">
             <div>
               <span class="panel-eyebrow">Equity Curve</span>
@@ -79,9 +148,10 @@
           <div id="chartWrap" class="chart-wrap">
             <div class="empty-state">Load a report to see the curve.</div>
           </div>
+          <div class="chart-caption" id="chartCaption">The curve will update as soon as the latest report is fetched.</div>
         </article>
 
-        <article class="panel summary-panel">
+        <article id="sessionSummary" class="panel summary-panel">
           <div class="panel-header">
             <div>
               <span class="panel-eyebrow">Session Summary</span>
@@ -89,10 +159,11 @@
             </div>
           </div>
           <div class="summary-list" id="summaryList"></div>
+          <div class="mini-grid" id="miniGrid"></div>
         </article>
       </section>
 
-      <section class="panel">
+      <section id="tradeJournal" class="panel">
         <div class="panel-header">
           <div>
             <span class="panel-eyebrow">Trades</span>
@@ -123,7 +194,7 @@
         </div>
       </section>
 
-      <section class="panel">
+      <section id="executionTimeline" class="panel">
         <div class="panel-header">
           <div>
             <span class="panel-eyebrow">Events</span>
@@ -135,6 +206,7 @@
         </div>
       </section>
     </main>
+  </section>
   </div>
 
   <script src="./app.js"></script>

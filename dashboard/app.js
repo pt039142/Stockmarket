@@ -3,6 +3,9 @@ const reportPath = '../reports/paper_trading/paper_trading_report.json';
 const dom = {
   connectionDot: document.getElementById('connectionDot'),
   connectionLabel: document.getElementById('connectionLabel'),
+  modeChip: document.getElementById('modeChip'),
+  refreshChip: document.getElementById('refreshChip'),
+  lastSeenChip: document.getElementById('lastSeenChip'),
   profitTarget: document.getElementById('profitTarget'),
   lossCap: document.getElementById('lossCap'),
   sessionMode: document.getElementById('sessionMode'),
@@ -18,8 +21,16 @@ const dom = {
   eventsList: document.getElementById('eventsList'),
   reportStamp: document.getElementById('reportStamp'),
   regimePill: document.getElementById('regimePill'),
+  quickNote: document.getElementById('quickNote'),
+  chartCaption: document.getElementById('chartCaption'),
+  miniGrid: document.getElementById('miniGrid'),
+  pulseBadge: document.getElementById('pulseBadge'),
+  pulseHeadline: document.getElementById('pulseHeadline'),
+  pulseSummary: document.getElementById('pulseSummary'),
+  pulseStats: document.getElementById('pulseStats'),
   refreshBtn: document.getElementById('refreshBtn'),
   demoBtn: document.getElementById('demoBtn'),
+  openJsonBtn: document.getElementById('openJsonBtn'),
 };
 
 function formatCurrency(value) {
@@ -147,6 +158,8 @@ function drawCurve(values) {
 }
 
 function renderSummary(summary, report) {
+  dom.profitTarget.textContent = formatCurrency(1500);
+  dom.lossCap.textContent = formatCurrency(500);
   dom.totalTrades.textContent = summary.total_trades ?? 0;
   dom.winRate.textContent = `${Number(summary.win_rate || 0).toFixed(2)}%`;
   dom.netPnl.textContent = formatCurrency(summary.net_pnl || 0);
@@ -154,9 +167,11 @@ function renderSummary(summary, report) {
   dom.totalTradesHint.textContent = `${summary.winning_trades || 0} wins and ${summary.losing_trades || 0} losses in the journal.`;
   dom.netPnlHint.textContent = summary.net_pnl >= 0 ? 'Trading day stayed positive.' : 'Review losses and reduce exposure.';
   dom.reportStamp.textContent = report.generated_at ? `Updated ${new Date(report.generated_at).toLocaleString()}` : 'Live report loaded';
+  dom.lastSeenChip.textContent = report.generated_at ? `Last refresh ${new Date(report.generated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'No refresh time';
   dom.regimePill.textContent = report.session_summaries?.[0]
     ? `Session ${report.session_summaries[0].profit_target_reached ? 'hit target' : report.session_summaries[0].loss_limit_hit ? 'hit loss cap' : 'running'}`
     : 'No session summary';
+  dom.modeChip.textContent = report.trades && report.trades.length ? 'Paper report' : 'Demo fallback';
 
   const latestSession = report.session_summaries?.[0] || {};
   dom.summaryList.innerHTML = [
@@ -207,6 +222,87 @@ function renderSummary(summary, report) {
     return curve;
   }, []) : [];
   dom.chartWrap.innerHTML = drawCurve(equity);
+  dom.chartCaption.textContent = report.trades && report.trades.length
+    ? 'Equity curve based on closed trades from the latest report.'
+    : 'No closed trades yet, so the demo curve is shown to keep the layout informative.';
+
+  const miniData = [
+    ['Profit Target', formatCurrency(1500)],
+    ['Loss Cap', formatCurrency(500)],
+    ['Open Positions', String(report.session_summaries?.[0]?.open_positions ?? 0)],
+    ['Report Mode', report.trades && report.trades.length ? 'Paper' : 'Demo'],
+  ];
+  dom.miniGrid.innerHTML = miniData
+    .map(([label, value]) => `
+      <div class="mini-card">
+        <div class="label">${label}</div>
+        <div class="value">${value}</div>
+      </div>
+    `)
+    .join('');
+}
+
+function renderMarketPulse(report, summary) {
+  const trades = report.trades || [];
+  const winRate = Number(summary.win_rate || 0);
+  const netPnl = Number(summary.net_pnl || 0);
+  const drawdown = Number(summary.max_drawdown || 0);
+  const targetHit = Boolean(report.session_summaries?.[0]?.profit_target_reached);
+  const lossHit = Boolean(report.session_summaries?.[0]?.loss_limit_hit);
+  const avgConfidence = trades.length
+    ? trades.reduce((total, trade) => total + Number(trade.confidence || 0), 0) / trades.length
+    : 0;
+  const pulseScore = Math.max(0, Math.min(100, Math.round(
+    (winRate * 0.45)
+    + (netPnl > 0 ? 18 : -12)
+    + (avgConfidence * 35)
+    + (drawdown < 250 ? 12 : -8)
+  )));
+
+  let badge = 'Watching';
+  let headline = 'Session is idle';
+  let summaryText = 'The dashboard is waiting for a fresh report. Once trades arrive, the pulse will shift to bias, risk, and confidence.';
+  let accent = 'neutral';
+
+  if (lossHit) {
+    badge = 'Protective stop';
+    headline = 'Risk limit already hit';
+    summaryText = 'The session has hit its loss guardrail. The safest next step is to stand down and review execution.';
+    accent = 'bad';
+  } else if (targetHit) {
+    badge = 'Target reached';
+    headline = 'Daily goal has been achieved';
+    summaryText = 'The strategy reached the day target. Best practice is to stop trading and preserve the session result.';
+    accent = 'good';
+  } else if (trades.length) {
+    badge = netPnl >= 0 ? 'Positive bias' : 'Defensive mode';
+    headline = netPnl >= 0 ? 'Market structure looks constructive' : 'Market structure is choppy';
+    summaryText = netPnl >= 0
+      ? 'Current results lean positive, with the system trading from strength instead of forcing entries.'
+      : 'The system is being selective and the session is not giving clean follow-through yet.';
+    accent = netPnl >= 0 ? 'good' : 'warning';
+  }
+
+  dom.pulseBadge.textContent = badge;
+  dom.pulseHeadline.textContent = headline;
+  dom.pulseSummary.textContent = summaryText;
+  dom.pulseBadge.className = `rail-badge ${accent}`;
+
+  const items = [
+    { label: 'Pulse Score', value: `${pulseScore}/100`, tone: pulseScore >= 70 ? 'good' : pulseScore >= 45 ? 'warning' : 'bad' },
+    { label: 'Bias', value: netPnl >= 0 ? 'Bullish' : 'Defensive', tone: netPnl >= 0 ? 'good' : 'warning' },
+    { label: 'Confidence', value: `${Math.round(avgConfidence * 100)}%`, tone: avgConfidence >= 0.8 ? 'good' : 'neutral' },
+    { label: 'Risk State', value: drawdown > 300 ? 'Tighten Up' : 'Controlled', tone: drawdown > 300 ? 'warning' : 'good' },
+  ];
+
+  dom.pulseStats.innerHTML = items
+    .map((item) => `
+      <div class="pulse-stat ${item.tone}">
+        <span>${item.label}</span>
+        <strong>${item.value}</strong>
+      </div>
+    `)
+    .join('');
 }
 
 function renderTrades(trades) {
@@ -256,11 +352,13 @@ function renderEvents(events) {
     .join('');
 }
 
-async function loadReport(useDemo = false) {
+async function loadReport(useDemo = false, silent = false) {
   try {
-    dom.connectionLabel.textContent = 'Loading report...';
-    dom.connectionDot.style.background = '#fbbf24';
-    dom.connectionDot.style.boxShadow = '0 0 0 6px rgba(251, 191, 36, 0.14)';
+    if (!silent) {
+      dom.connectionLabel.textContent = 'Loading report...';
+      dom.connectionDot.style.background = '#fbbf24';
+      dom.connectionDot.style.boxShadow = '0 0 0 6px rgba(251, 191, 36, 0.14)';
+    }
 
     const report = useDemo
       ? makeFallbackReport()
@@ -285,12 +383,16 @@ async function loadReport(useDemo = false) {
 
     const summary = report.summary || {};
     renderSummary(summary, report);
+    renderMarketPulse(report, summary);
     renderTrades(report.trades || []);
     renderEvents(report.events || []);
 
     dom.connectionLabel.textContent = useDemo ? 'Demo view loaded' : 'Report connected';
     dom.connectionDot.style.background = '#86efac';
     dom.connectionDot.style.boxShadow = '0 0 0 6px rgba(134, 239, 172, 0.14)';
+    dom.quickNote.textContent = report.trades && report.trades.length
+      ? 'Your latest report has real trades. Review the curve, then scan the events for entries and exits.'
+      : 'No trades in the latest report yet. That is fine for a quiet session, but demo mode stays available so the dashboard remains useful.';
   } catch (error) {
     console.error(error);
     dom.connectionLabel.textContent = 'Using demo view';
@@ -298,12 +400,16 @@ async function loadReport(useDemo = false) {
     dom.connectionDot.style.boxShadow = '0 0 0 6px rgba(251, 191, 36, 0.14)';
     const report = makeFallbackReport();
     renderSummary(report.summary, report);
+    renderMarketPulse(report, report.summary || {});
     renderTrades(report.trades);
     renderEvents(report.events);
+    dom.quickNote.textContent = 'Unable to load the live report, so the dashboard is showing a friendly demo session.';
   }
 }
 
 dom.refreshBtn.addEventListener('click', () => loadReport(false));
 dom.demoBtn.addEventListener('click', () => loadReport(true));
+dom.openJsonBtn.addEventListener('click', () => window.open(reportPath, '_blank'));
 
 loadReport(false);
+setInterval(() => loadReport(false, true), 30000);
