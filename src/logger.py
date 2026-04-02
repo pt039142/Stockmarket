@@ -1,10 +1,22 @@
 import logging
-import os
+from pathlib import Path
 
-# Setup logging
-log_path = os.path.join(os.path.dirname(__file__), '../logs/trading.log')
-logging.basicConfig(filename=log_path, level=logging.INFO,
-                    format='%(asctime)s %(levelname)s %(message)s')
+
+LOG_DIR = Path(__file__).resolve().parent.parent / 'logs'
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+LOG_PATH = LOG_DIR / 'trading.log'
+
+try:
+    logging.basicConfig(
+        filename=str(LOG_PATH),
+        level=logging.INFO,
+        format='%(asctime)s %(levelname)s %(message)s',
+    )
+except OSError:
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s %(levelname)s %(message)s',
+    )
 
 def log_event(event):
     logging.info(event)
